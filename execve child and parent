@@ -1,0 +1,96 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char *argv[]) {
+    printf("\n[Child Program] Received %d arguments\n", argc - 1);
+
+    if (argc < 2) {
+        printf("No array elements received!\n");
+        return 0;
+    }
+
+    int n = argc - 1;
+    int arr[n];
+
+    // Convert command-line strings back to integers
+    for (int i = 0; i < n; i++) 
+        arr[i] = atoi(argv[i + 1]);
+
+    printf("[Child Program] Array in reverse order: ");
+    for (int i = n - 1; i >= 0; i--)
+        printf("%d ", arr[i]);
+    printf("\n");
+	
+	return 0;
+}
+
+---------------------
+//parent
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <string.h>
+
+// Simple Bubble Sort
+void bubbleSort(int a[], int n) {
+    int i, j, temp;
+    for (i = 0; i < n - 1; i++) {
+        for (j = 0; j < n - i - 1; j++) {
+            if (a[j] > a[j + 1]) {
+                temp = a[j];
+                a[j] = a[j + 1];
+                a[j + 1] = temp;
+            }
+        }
+    }
+}
+
+int main() {
+    int n;
+    printf("Enter number of elements: ");
+    scanf("%d", &n);
+
+    int arr[n];
+    printf("Enter %d integers: ", n);
+    for (int i = 0; i < n; i++)
+        scanf("%d", &arr[i]);
+
+    bubbleSort(arr, n);
+    printf("\n[Parent] Sorted array: ");
+    for (int i = 0; i < n; i++)
+        printf("%d ", arr[i]);
+    printf("\n");
+
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        perror("fork failed");
+        exit(1);
+    }
+    else if (pid == 0) {
+        // Child process: prepare arguments for execve
+        char *args[n + 2]; // +2 for program name and NULL terminator
+        args[0] = "./child"; // program to be executed
+
+        char buffer[20];
+        for (int i = 0; i < n; i++) {
+            snprintf(buffer, sizeof(buffer), "%d", arr[i]);
+            args[i + 1] = strdup(buffer); // convert int to string
+        }
+        args[n + 1] = NULL; // execve needs a NULL-terminated array
+
+        printf("[Child] Executing child program with execve...\n");
+
+        execve(args[0], args, NULL); // execute new program
+        perror("execve failed"); // if execve fails
+        exit(1);
+    }
+    else {
+        // Parent waits for child to finish
+        wait(NULL);
+        printf("[Parent] Child finished execution.\n");
+    }
+	return 0;
+}
+
