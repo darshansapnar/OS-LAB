@@ -1,0 +1,79 @@
+echo "Enter the filename : "
+read fileName
+
+ch=1
+while [ "$ch" -lt 6 ]
+do
+    echo "Enter the Choice : "
+    echo "1) Create address book "
+    echo "2) View address book "
+    echo "3) Insert a record "
+    echo "4) Delete the record "
+    echo "5) Modify record "
+    echo "6) exit "
+    read ch
+
+    case $ch in
+        1)
+            count=1
+            while [ "$count" -gt 0 ]
+            do
+                echo "Enter Name : "
+                read name
+                echo "Enter Subject : "
+                read subject
+                echo "Enter Class : "
+                read class
+                echo "$name   $subject   $class" | cat >> "$fileName"
+                echo "Enter 0 to Stop, 1 to Enter next : "
+                read count
+            done
+            ;;
+        2)
+            cat "$fileName"
+            ;;
+        3)
+            echo "Enter Name : "
+            read name
+            echo "Enter Subject : "
+            read subject
+            echo "Enter Class : "
+            read class
+            echo "$name   $subject   $class" | cat >> "$fileName"
+            ;;
+        4)
+            echo "Enter Name / Subject / Class which you want to delete : "
+            read pattern
+            temp="temp"
+            
+            # use overwrite (>) not append (>>)
+            grep -v "$pattern" "$fileName" | cat > "$temp"
+
+            rm "$fileName"
+            cat "$temp" | cat > "$fileName"
+            rm "$temp"
+            ;;
+        5)
+            echo "Modify record"
+            echo "Enter Name / Subject / Class to modify : "
+            read pattern
+            temp="temp"
+
+            # remove old record
+            grep -v "$pattern" "$fileName" | cat > "$temp"
+
+            rm "$fileName"
+            cat "$temp" | cat > "$fileName"
+            rm "$temp"
+
+            # insert new data
+            echo "Enter Name : "
+            read name
+            echo "Enter Subject : "
+            read subject
+            echo "Enter Class : "
+            read class
+            echo "$name   $subject   $class" | cat >> "$fileName"
+            ;;
+    esac
+done

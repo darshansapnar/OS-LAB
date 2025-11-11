@@ -3,18 +3,20 @@
 #include <semaphore.h>
 #include <unistd.h>
 
-sem_t wrt;
-pthread_mutex_t mutex;
-int read_count = 0;
-int data = 0;
+sem_t wrt;              // semaphore for writers
+pthread_mutex_t mutex;  // mutex for reader count
+int read_count = 0;     // number of readers currently reading
+int data = 0;           // shared resource
 
 void *writer(void *wno) {
     for (int i = 0; i < 3; i++) {
-        sem_wait(&wrt);
+        sem_wait(&wrt); // wait if any reader/writer is active
+
         data++;
         printf("Writer %d is writing data = %d\n", *((int *)wno), data);
         sleep(1);
-        sem_post(&wrt);
+
+        sem_post(&wrt); // release access
         sleep(1);
     }
 }
@@ -24,16 +26,16 @@ void *reader(void *rno) {
         pthread_mutex_lock(&mutex);
         read_count++;
         if (read_count == 1)
-            sem_wait(&wrt);
+            sem_wait(&wrt); // first reader locks writer
         pthread_mutex_unlock(&mutex);
 
         printf("Reader %d is reading data = %d\n", *((int *)rno), data);
         sleep(1);
 
-        pthread_mutex_lock(&mutex);
+        pthread_mutex_lock(&mutex); //mutex is locked here if any reader tries to enter on line 13 it will get msg, ki boss darwaja bnd he
         read_count--;
         if (read_count == 0)
-            sem_post(&wrt);
+            sem_post(&wrt); // last reader releases writer
         pthread_mutex_unlock(&mutex);
 
         sleep(1);
